@@ -1,120 +1,1206 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>تحديث اللعبة</title>
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>Axel Dash</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: black;
+            user-select: none;
+            font-family: Arial, sans-serif;
+        }
+        #bgCanvas {
+            position: absolute;
+            z-index: 0;
+            left: 0; top: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+        }
+        #gameCanvas {
+            display: block;
+            margin: 0 auto;
+            background: none !important;
+            box-shadow: 0px 0px 5px white;
+            position: relative;
+            z-index: 2;
+        }
+        #gameOver {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            border-radius: 0px;
+            text-align: center;
+            color: white;
+            font-size: 2em;
+            box-shadow: 0 0 25px grey;
+            z-index: 10;
+        }
+        #restartBtn {
+            display: block;
+            margin-top: 50px;
+            padding: 10px 20px;
+            font-size: 0.4em;
+            background-color: green;
+            color: white;
+            border: none;
+            border-radius: 100px;
+            width: 80%;
+            cursor: pointer;
+            box-shadow: 0 0 30px green;
+        }
+        #highScore, #score, #coins, #health {
+            position: absolute;
+            color: white;
+            opacity: 0.9;
+            font-size: 1.2em;
+            right: 10px;
+            text-shadow: 1px 1px 2px black;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+        }
+        #highScore { top: 10px; }
+        #score { top: 40px;}
+        #coins { top: 70px; color: gold; font-size: 1em;}
+        #health { top: 100px; color: #ff5252; font-size: 1em;}
+        
+        .icon {
+            width: 20px;
+            height: 20px;
+            margin-left: 5px;
+        }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-        height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background: #0f2027;
-        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-        font-family: 'Orbitron', sans-serif;
-        overflow: hidden;
-        perspective: 1000px;
-    }
-
-    .scene {
-        text-align: center;
-        color: #fff;
-        z-index: 10;
-        animation: float 4s ease-in-out infinite;
-    }
-
-    h1 {
-        font-size: 4em;
-        background: linear-gradient(90deg, #ff416c, #ff4b2b);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        animation: flicker 1.5s infinite alternate;
-    }
-
-    p {
-        font-size: 1.5em;
-        color: #ffffffcc;
-        margin-top: 20px;
-        animation: pulse 2s infinite;
-    }
-
-    @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-20px); }
-    }
-
-    @keyframes flicker {
-        0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
-        20%, 22%, 24%, 55% { opacity: 0.4; }
-    }
-
-    @keyframes pulse {
-        0% { transform: scale(1); opacity: 1; }
-        50% { transform: scale(1.05); opacity: 0.85; }
-        100% { transform: scale(1); opacity: 1; }
-    }
-
-    /* خلفية ديناميكية */
-    .bg-dots {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        top: 0;
-        left: 0;
-    }
-
-    .dot {
-        position: absolute;
-        width: 15px;
-        height: 15px;
-        background: #ff416c;
-        border-radius: 50%;
-        animation: move 10s linear infinite;
-        opacity: 0.7;
-    }
-
-    @keyframes move {
-        0% { transform: translateY(100vh) translateX(0) scale(0.5); opacity:0; }
-        50% { opacity:0.8; }
-        100% { transform: translateY(-10vh) translateX(50vw) scale(1); opacity:0; }
-    }
-</style>
+        #startScreen {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            text-align: center;
+            color: white;
+            display: flex;
+            align-items: center; justify-content: center;
+            flex-direction: column;
+            font-size: 2em;
+            z-index: 20;
+        }
+        #startScreen img {
+            cursor: pointer;
+            width: 80px;
+            height: auto;
+            margin-bottom: 20px;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        #shopScreen {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0, 0, 30, 0.95);
+            text-align: center;
+            color: white;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+            z-index: 100;
+        }
+        .shop-header {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            color: #ffcc00;
+            text-shadow: 0 0 10px #ffcc00;
+        }
+        .skin-container {
+            display: flex; flex-wrap: wrap; justify-content: center;
+            gap: 15px; margin: 20px 0;
+            max-height: 70%; overflow-y: auto;
+        }
+        .skin-item {
+            width: 100px; height: 120px;
+            background: rgba(0, 30, 60, 0.7);
+            border-radius: 10px;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            box-shadow: 0 0 10px rgba(0, 100, 255, 0.5);
+        }
+        .skin-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(0, 150, 255, 0.8);
+        }
+        .skin-item.selected {
+            border-color: #00ff9d;
+            box-shadow: 0 0 15px rgba(0, 255, 157, 0.8);
+        }
+        .skin-preview {
+            width: 60px; height: 60px;
+            margin: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; font-weight: bold;
+            border-radius: 5px;
+        }
+        .skin-name { font-size: 0.9em; margin-bottom: 5px; }
+        .skin-price { font-size: 0.8em; color: gold; }
+        .skin-owned { font-size: 0.8em; color: #00ff9d; }
+        #backBtn, #shopBtn {
+            background-color: #555;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            cursor: pointer;
+            margin-top: 10px;
+            box-shadow: 0 0 10px #555;
+        }
+        #shopBtn {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #ffcc00;
+            color: black; box-shadow: 0 0 15px #ffcc00;
+            z-index: 5;
+        }
+        #particlesCanvas {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .controls-info {
+            position: absolute;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 0.8em;
+            text-align: center;
+            opacity: 0.7;
+            z-index: 5;
+        }
+        .new-high-score {
+            position: absolute;
+            top: 130px;
+            right: 10px;
+            color: gold;
+            font-size: 1em;
+            text-shadow: 1px 1px 2px black;
+            z-index: 5;
+            display: none;
+            animation: glow 1.5s infinite alternate;
+        }
+        @keyframes glow {
+            from { text-shadow: 0 0 5px gold; }
+            to { text-shadow: 0 0 20px gold, 0 0 30px gold; }
+        }
+    </style>
 </head>
 <body>
-<div class="bg-dots">
-    <!-- إنشاء 20 نقطة ديناميكية -->
-    <div class="dot" style="left:10%; animation-delay:0s;"></div>
-    <div class="dot" style="left:20%; animation-delay:2s;"></div>
-    <div class="dot" style="left:30%; animation-delay:4s;"></div>
-    <div class="dot" style="left:40%; animation-delay:1s;"></div>
-    <div class="dot" style="left:50%; animation-delay:3s;"></div>
-    <div class="dot" style="left:60%; animation-delay:5s;"></div>
-    <div class="dot" style="left:70%; animation-delay:2.5s;"></div>
-    <div class="dot" style="left:80%; animation-delay:4.5s;"></div>
-    <div class="dot" style="left:90%; animation-delay:1.2s;"></div>
-    <div class="dot" style="left:15%; animation-delay:3.7s;"></div>
-    <div class="dot" style="left:25%; animation-delay:0.9s;"></div>
-    <div class="dot" style="left:35%; animation-delay:2.2s;"></div>
-    <div class="dot" style="left:45%; animation-delay:4.1s;"></div>
-    <div class="dot" style="left:55%; animation-delay:1.8s;"></div>
-    <div class="dot" style="left:65%; animation-delay:3.3s;"></div>
-    <div class="dot" style="left:75%; animation-delay:0.5s;"></div>
-    <div class="dot" style="left:85%; animation-delay:2.7s;"></div>
-    <div class="dot" style="left:95%; animation-delay:1.5s;"></div>
-    <div class="dot" style="left:5%; animation-delay:4.9s;"></div>
-    <div class="dot" style="left:50%; animation-delay:0.3s;"></div>
-</div>
+    <canvas id="bgCanvas"></canvas>
+    <div id="startScreen">
+        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIiBmaWxsPSJ3aGl0ZSI+PHBhdGggZD0iTTI1NiA0OEMxNDEuMSA0OCA0OCAxNDEuMSA0OCAyNTZzOTMuMSAyMDggMjA4IDIwOCAyMDgtOTMuMSAyMDgtMjA4UzM3MC45IDQ4IDI1NiA0OHptLTI0IDM4NGMtMTMuMyAwLTI0LTEwLjctMjQtMjRzMTAuNy0yNCAyNC0yNCAyNCAxMC43IDI0IDI0LTEwLjcgMjQtMjQgMjR6bTMyLTE2OGMwIDE3LjctMTQuMyAzMi0zMiAzMnMtMzItMTQuMy0zMi0zMnMxNC4zLTMyIDMyLTMyIDMyIDE0LjMgMzIgMzJ6bTE2MCA2NGMwIDE3LjctMTQuMyAzMi0zMiAzMnMtMzItMTQuMy0zMi0zMnMxNC4zLTMyIDMyLTMyIDMyIDE0LjMgMzIgMzJ6Ii8+PC9zdmc+" alt="Play">
+        <div>إلمس الشاشة للبدأ</div>
+        <div class="controls-info">إلمس أي مكان للقفز</div>
+    </div>
+    <canvas id="gameCanvas" width="390" height="600"></canvas>
+    <canvas id="particlesCanvas" width="390" height="600"></canvas>
+    <div id="gameOver">
+        <div>لقد خسرت</div>
+        <div id="finalScore" style="font-size: 0.6em; margin: 20px 0;">النتيجة: 0</div>
+        <button id="restartBtn">إعادة المحاولة</button>
+    </div>
+    <div id="highScore">
+        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1NzYgNTEyIiBmaWxsPSIjZmZjYzAwIj48cGF0aCBkPSJNNDAwIDBIMTc2QzE0OS41IDAgMTI4IDIxLjUgMTI4IDQ4VjI1NkMxMjggMzA2LjcgMTQ5LjUgMzUyLjcgMTg2LjEgMzgyLjZDMTE3LjMgNDA3LjkgMjU2LjQgNDI0LjMgMjg3LjkgNDMyLjZDMjg4IDQzMi42IDI4OCA0MzIuNiAyODggNDMyLjZDMjg4LjEgNDMyLjYgMjg4LjEgNDMyLjYgMjg4LjIgNDMyLjZDMzE5LjYgNDI0LjMgMzU4LjcgNDA3LjkgMzg5LjkgMzgyLjZDNDI2LjUgMzUyLjcgNDQ4IDMwNi43IDQ0OCAyNTZWNDhDNDQ4IDIxLjUgNDI2LjUgMCA0MDAgMFYwWk00MDAgMjU2QzQwMCAyODkuOSAzODUuNyAzMjEuNCAzNjEuMyAzNDMuMkMzMzcuNSAzNjQuNSAzMDUuOCAzNzguOSAyODggMzg1LjRDMjcwLjIgMzc4LjkgMjM4LjUgMzY0LjUgMjE0LjcgMzQzLjJDMTkwLjMgMzIxLjQgMTc2IDI4OS45IDE3NiAyNTZWNjRINDAwVjI1NlpNNDMyIDY0QzQ0MC44IDY0IDQ0OCA3MS4xNiA0NDggODBDNDQ4IDg4Ljg0IDQ0MC44IDk2IDQzMiA5Nkg0MTZWMTkySDQzMkM0NDAuOCAxOTIgNDQ4IDE5OS4yIDQ0OCAyMDhDNDQ4IDI0Ny44IDQzMS44IDI4NS4xIDQwMy43IDMxMC45QzQxMC45IDMwMS4zIDQxNiAyODkuOCA0MTYgMjc3LjVWMjI0QzQxNiAyMTUuMiA0MDguOCAyMDggNDAwIDIwOEgzODRWOTZIMzY4QzM1OS4yIDk2IDM1MiA4OC44NCAzNTIgODBDMzUyIDcxLjE2IDM1OS4yIDY0IDM2OCA2NEg0MzJaTTM1LjE3IDExMi44QzQ3Ljc5IDEwOC42IDUyLjA5IDkzLjc5IDQ2Ljk2IDgwLjQ0QzQyLjgzIDY5LjgzIDM0LjA0IDYwLjc0IDIyLjU4IDU1LjNDOS45MDMgNDkuMzcgMCAzNi44MiAwIDIyLjRDMCAxMC4wMyAxMC4wMyAwIDIyLjQgMEgxMDEuNkMxMTMuMSAwIDEyNC4yIDcuNzk2IDEyNy42IDE5LjQ0QzEzMC45IDMwLjkzIDEyNi44IDQzLjEyIDExNy4zIDUwLjdDMTA5LjkgNTYuNzQgMTA0LjkgNjUuNTkgMTAzLjUgNzUuMThDMTAxLjggODcuMzkgOTEuNzggOTYuMzEgNzkuNDggOTYuMzFINjRWMTI4SDc5LjQ4QzEyMC4zIDEyOCAxNTQuNSA5OS41MiAxNTkuOCA2MC4zMUMxNjUuNSAxOC42MyAxMzMuOCAtMTguNjIgOTMuMDQgMTEuMzhDOTEuMyAxMi42NyA4OS43MSAxNC4wOSA4OC4yNyAxNS42MkM4NS42NiA5LjkwNCA3OS44IDYuMDMxIDczLjE4IDYuMDMxSDIyLjRDMTkuODcgNi4wMzEgMTcuNiA4LjI5MSAxNy42IDEwLjgyQzE3LjYgMTYuMjQgMjEuMDIgMjEuMTcgMjYuNjMgMjMuNDRDNDUuNDYgMzEuNTYgNTkuMjYgNDguODEgNjMuODMgNjkuNDRDNjQuOTggNzUuNDggNjMuMjMgODEuNjYgNTkuMDIgODYuMzdDNTQuODEgOTEuMDggNDguNjcgOTMuNzYgNDIuMjQgOTMuNzZIMzUuMTdWMTEyLjhaIi8+PC9zdmc+" class="icon" alt="Trophy">
+        أفضل نتيجة: 0
+    </div>
+    <div class="new-high-score" id="newHighScore">799</div>
+    <div id="score">
+        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIiBmaWxsPSJ3aGl0ZSI+PHBhdGggZD0iTTI1NiA1MTJjMTQxLjQgMCAyNTYtMTE0LjYgMjU2LTI1NlMzOTcuNCAwIDI1NiAwUzAgMTE0LjYgMCAyNTZzMTE0LjYgMjU2IDI1NiAyNTZ6TTEyMCAxNjBWMzUyaDQwdjE2aDE2VjM1Mmg0MFYzMzZoMTZ2MTZoNDB2LTE2aDE2VjM1Mmg0MHYtMTZoMTZWMzUyaDQwVjE2MEgxMjB6Ii8+PC9zdmc+" class="icon" alt="Score">
+        النتيجة: 0
+    </div>
+    <div id="coins">
+        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIiBmaWxsPSIjZmZjYzAwIj48cGF0aCBkPSJNMCAyNTZDMCAxMTQuNiAxMTQuNiAwIDI1NiAwQzM5Ny40IDAgNTEyIDExNC42IDUxMiAyNTZDNTEyIDM5Ny40IDM5Ny40IDUxMiAyNTYgNTEyQzExNC42IDUxMiAwIDM5Ny40IDAgMjU2ek0yNTYgNjRDMTQ5LjEgNjQgNjQgMTQ5LjEgNjQgMjU2QzY0IDM2MiAxNDkuMSA0NDggMjU2IDQ0OEMzNjIgNDQ4IDQ0OCAzNjIgNDQ4IDI1NkM0NDggMTQ5LjEgMzYyIDY0IDI1NiA2NFpNMjU2IDEyOEMyOTYuOSAxMjggMzM2IDE2Ny4xIDMzNiAyMDhDMzM2IDI0OC45IDI5Ni45IDI4OCAyNTYgMjg4QzIxNS4xIDI4OCAxNzYgMjQ4LjkgMTc2IDIwOEMxNzYgMTY3LjEgMjE1LjEgMTI4IDI1NiAxMjhaTTI1NiAzMzZDMjg1LjYgMzM2IDMxMS45IDM0OS44IDMyOS4zIDM3MS42QzM0MS40IDM4Ni43IDMyMi4yIDQwNy41IDMwOS43IDM5My40QzI5NS45IDM3Ny43IDI3Ni43IDM2OCAyNTYgMzY4QzIzNS4zIDM2OCAyMTYuMSAzNzcuNyAyMDIuMyAzOTMuNEMxODkuOCA0MDcuNSAxNzAuNiAzODYuNyAxODIuNyAzNzEuNkMyMDAuMSAzNDkuOCAyMjYuNCAzMzYgMjU2IDMzNloiLz48L3N2Zz4=" class="icon" alt="Coins">
+        العملات: 0
+    </div>
+    <div id="health">
+        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIiBmaWxsPSIjZmY1MjUyIj48cGF0aCBkPSJNNDcuNiAzMDAuNEwyMjguMyA0NjkuMWM3LjUgNyAxNy40IDEwLjkgMjcuNyAxMC45czIwLjItMy45IDI3LjctMTAuOUw0NjQuNCAzMDAuNGMzMC40LTI4LjMgNDcuNi02OCA0Ny42LTEwOS41di01LjhjMC02OS45LTUwLjUtMTI5LjUtMTE5LjQtMTQxQzM0NyAzNi41IDMwMC42IDUxLjQgMjY4IDg0TDI1NiA5NiAyNDQgODRjLTMyLjYtMzIuNi03OS00Ny41LTEyNC42LTM5LjlDNTAuNSA1NS42IDAgMTE1LjIgMCAxODUuMXY1LjhjMCA0MS41IDE3LjIgODEuMiA0Ny42IDEwOS41eiIvPjwvc3ZnPg==" class="icon" alt="Health">
+        الصحة: 3
+    </div>
+    <button id="shopBtn">المتجر</button>
 
-<div class="scene">
-    <h1>اللعبة قيد التحديث!</h1>
-    <p>نحسن تجربتك قريبًا. انتظر قليلًا 🔥</p>
-</div>
+    <!-- Shop Screen -->
+    <div id="shopScreen">
+        <div class="shop-header">المتجر - اختر الجلد</div>
+        <div class="skin-container" id="skinContainer"></div>
+        <button id="backBtn">العودة</button>
+    </div>
 
+    <script>
+    // --- Geometry Dash Animated BACKGROUND ---
+    const bgCanvas = document.getElementById('bgCanvas');
+    const bgCtx = bgCanvas.getContext('2d');
+    function resizeBgCanvas() {
+      bgCanvas.width = window.innerWidth;
+      bgCanvas.height = window.innerHeight;
+    }
+    resizeBgCanvas();
+    window.addEventListener('resize', resizeBgCanvas);
+
+    const geomLayers = [
+      {speed: 0.4, size: 60, color1:'#042b66', color2:'#0646b6', alpha:1, count:7, yOffset:110, shapes:[]},
+      {speed: 0.7, size: 38, color1:'#0a75da', color2:'#10cbff', alpha:0.8, count:13, yOffset:185, shapes:[]},
+      {speed: 1.1, size: 22, color1:'#43e4c9', color2:'#19fdab', alpha:0.7, count:18, yOffset:260, shapes:[]},
+      {speed: 1.6, size: 16, color1:'#f4d93c', color2:'#ff8800', alpha:0.52, count:25, yOffset:370, shapes:[]},
+      {speed: 2.25, size: 13, color1:'#f531a4', color2:'#fc7303', alpha:0.32, count:24, yOffset:410, shapes:[]}
+    ];
+
+    function initializeGeomLayers() {
+      for (const layer of geomLayers) {
+        layer.shapes = [];
+        for (let i = 0; i < layer.count; i++) {
+          layer.shapes.push({
+            x: Math.random() * bgCanvas.width,
+            y: layer.yOffset + Math.random() * 70,
+            w: layer.size + Math.random() * layer.size / 2,
+            h: layer.size + Math.random() * layer.size / 2,
+            type: Math.random() > 0.3 ? "rect" : "circle",
+            angle: Math.random() * 360
+          });
+        }
+      }
+    }
+    initializeGeomLayers();
+
+    function drawBGGeometryDashStyle() {
+      const grad = bgCtx.createLinearGradient(0, 0, 0, bgCanvas.height);
+      grad.addColorStop(0, "#03163d");
+      grad.addColorStop(1, "#1273ba");
+      bgCtx.fillStyle = grad;
+      bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+
+      for (const layer of geomLayers) {
+        for (const s of layer.shapes) {
+          let g = bgCtx.createLinearGradient(s.x, s.y, s.x + s.w, s.y + s.h);
+          g.addColorStop(0, layer.color1);
+          g.addColorStop(1, layer.color2);
+
+          bgCtx.save();
+          bgCtx.globalAlpha = layer.alpha;
+          bgCtx.translate(s.x + s.w / 2, s.y + s.h / 2);
+          bgCtx.rotate((s.angle * Math.PI) / 180);
+          bgCtx.translate(-s.w / 2, -s.h / 2);
+          if (s.type === "rect") {
+            bgCtx.fillStyle = g;
+            bgCtx.fillRect(0, 0, s.w, s.h);
+            bgCtx.strokeStyle = "rgba(255,255,255,0.05)";
+            bgCtx.lineWidth = 2;
+            bgCtx.strokeRect(0, 0, s.w, s.h);
+          } else {
+            let lg = bgCtx.createRadialGradient(s.w / 2, s.h / 2, 2, s.w / 2, s.h / 2, s.w / 2);
+            lg.addColorStop(0, layer.color2);
+            lg.addColorStop(1, layer.color1);
+            bgCtx.fillStyle = lg;
+            bgCtx.beginPath();
+            bgCtx.arc(s.w / 2, s.h / 2, s.w / 2, 0, Math.PI * 2);
+            bgCtx.fill();
+          }
+          bgCtx.restore();
+        }
+      }
+    }
+
+    function updateBGGeometryDashStyle() {
+      for (const layer of geomLayers) {
+        for (const s of layer.shapes) {
+          s.x -= layer.speed;
+          s.angle += 0.002 * layer.speed;
+          if (s.x + s.w < 0) {
+            s.x = bgCanvas.width + Math.random() * 50;
+            s.y = layer.yOffset + Math.random() * 70;
+          }
+        }
+      }
+    }
+    
+    function bgLoop() {
+      updateBGGeometryDashStyle();
+      drawBGGeometryDashStyle();
+      requestAnimationFrame(bgLoop);
+    }
+    bgLoop();
+
+    // -------- اللعبة الرئيسية --------
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const particlesCanvas = document.getElementById('particlesCanvas');
+    const particlesCtx = particlesCanvas.getContext('2d');
+    
+    // تهيئة اللعبة
+    const groundHeight = 0;
+    const player = {
+        x: 50,
+        y: canvas.height - groundHeight - 50,
+        width: 50,
+        height: 50,
+        color: 'red',
+        velocityY: 0,
+        gravity: 0.7,
+        jumpPower: -11,
+        isJumping: false,
+        rotation: 0,
+        rotationSpeed: 0.1,
+        shadowBlur: 20,
+        shadowColor: 'blue',
+        skin: 'default',
+        trailEnabled: true
+    };
+
+    // نظام الجلود
+    const skins = [
+        { id: 'default', name: 'الأساسي', color: '#ff00ff', trail: '#ff00ff', price: 0, owned: true },
+        { id: 'blue', name: 'الأزرق', color: '#00ffff', trail: '#00ffff', price: 25, owned: false },
+        { id: 'green', name: 'الأخضر', color: '#00ff9d', trail: '#00ff9d', price: 50, owned: false },
+        { id: 'gold', name: 'الذهبي', color: '#ffd700', trail: '#ffd700', price: 100, owned: false },
+        { id: 'rainbow', name: 'قوس قزح', color: 'rainbow', trail: 'rainbow', price: 200, owned: false }
+    ];
+    
+    // نظام الجسيمات
+    let trailParticles = [];
+    let explosionParticles = [];
+    
+    // تحميل البيانات المحفوظة
+    player.skin = localStorage.getItem('selectedSkin') || 'default';
+    let coinCount = localStorage.getItem('axelCoins') ? parseInt(localStorage.getItem('axelCoins')) : 0;
+    let highScore = localStorage.getItem('axelHighScore') ? parseInt(localStorage.getItem('axelHighScore')) : 0;
+    
+    // متغيرات اللعبة
+    const obstacles = [];
+    const traps = [];
+    const floatingPlatforms = [];
+    const coins = [];
+    const powerUps = [];
+    const powerUpTypes = ['speed', 'slow', 'coinMultiplier'];
+    let isGameOver = false;
+    let gameRunning = false;
+    let score = 0;
+    let obstacleSpeed = 7;
+    
+    let lastPowerUpTime = 0;
+    const powerUpInterval = 3500;
+    let activePowerUps = {};
+
+    // نظام الصحة
+    let health = 3;
+    let isInvulnerable = false;
+    let invulnerabilityTimer = 0;
+
+    // محاكاة الصوتيات
+    function playJumpSound() {
+        // محاكاة صوت القفز باستخدام Web Audio API
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 523.25; // C5
+            gainNode.gain.value = 0.1;
+            
+            oscillator.start();
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
+            oscillator.stop(audioContext.currentTime + 0.2);
+        } catch (e) {
+            console.log("Web Audio API not supported");
+        }
+    }
+    
+    function playCollisionSound() {
+        // محاكاة صوت الاصطدام
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.value = 110; // A2
+            gainNode.gain.value = 0.2;
+            
+            oscillator.start();
+            oscillator.frequency.exponentialRampToValueAtTime(55, audioContext.currentTime + 0.5);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
+            oscillator.stop(audioContext.currentTime + 0.5);
+        } catch (e) {
+            console.log("Web Audio API not supported");
+        }
+    }
+
+    // تهيئة المتجر
+    function initShop() {
+        const skinContainer = document.getElementById('skinContainer');
+        skinContainer.innerHTML = '';
+        
+        skins.forEach(skin => {
+            const skinElement = document.createElement('div');
+            skinElement.className = 'skin-item';
+            if (player.skin === skin.id) {
+                skinElement.classList.add('selected');
+            }
+            
+            // تحميل حالة الملكية
+            const ownedKey = `skin_owned_${skin.id}`;
+            skin.owned = localStorage.getItem(ownedKey) === 'true' || skin.price === 0;
+            
+            // معاينة الجلد
+            const previewElement = document.createElement('div');
+            previewElement.className = 'skin-preview';
+            
+            if (skin.color === 'rainbow') {
+                previewElement.style.background = 'linear-gradient(45deg, #ff00ff, #00ffff, #00ff9d, #ffcc00)';
+                previewElement.style.backgroundSize = '400% 400%';
+                previewElement.style.animation = 'rainbow 2s linear infinite';
+            } else {
+                previewElement.style.background = `linear-gradient(45deg, ${skin.color}, ${adjustColor(skin.color, -30)})`;
+            }
+            
+            previewElement.innerHTML = '<div style="font-size: 24px; color: white; margin-top: 5px;">■</div>';
+            
+            const nameElement = document.createElement('div');
+            nameElement.className = 'skin-name';
+            nameElement.textContent = skin.name;
+            
+            const priceOrStatusElement = document.createElement('div');
+            if (skin.owned) {
+                priceOrStatusElement.className = 'skin-owned';
+                priceOrStatusElement.textContent = '✓ مملوك';
+            } else {
+                priceOrStatusElement.className = 'skin-price';
+                priceOrStatusElement.textContent = `${skin.price} عملة`;
+            }
+            
+            skinElement.appendChild(previewElement);
+            skinElement.appendChild(nameElement);
+            skinElement.appendChild(priceOrStatusElement);
+            
+            skinElement.addEventListener('click', () => {
+                if (skin.owned) {
+                    // اختيار الجلد
+                    player.skin = skin.id;
+                    localStorage.setItem('selectedSkin', skin.id);
+                    
+                    // تحديث الواجهة
+                    document.querySelectorAll('.skin-item').forEach(el => el.classList.remove('selected'));
+                    skinElement.classList.add('selected');
+                    
+                    showNotification(`تم اختيار جلد ${skin.name}!`);
+                } else {
+                    // شراء الجلد
+                    if (coinCount >= skin.price) {
+                        coinCount -= skin.price;
+                        skin.owned = true;
+                        localStorage.setItem(`skin_owned_${skin.id}`, 'true');
+                        localStorage.setItem('axelCoins', coinCount);
+                        
+                        // تحديث الواجهة
+                        priceOrStatusElement.className = 'skin-owned';
+                        priceOrStatusElement.textContent = '✓ مملوك';
+                        
+                        // اختيار الجلد تلقائياً
+                        player.skin = skin.id;
+                        localStorage.setItem('selectedSkin', skin.id);
+                        
+                        document.querySelectorAll('.skin-item').forEach(el => el.classList.remove('selected'));
+                        skinElement.classList.add('selected');
+                        
+                        document.getElementById('coins').textContent = `العملات: ${coinCount}`;
+                        showNotification(`تم شراء جلد ${skin.name}!`);
+                    } else {
+                        showNotification(`ليس لديك ما يكفي من العملات! تحتاج ${skin.price} عملة.`);
+                    }
+                }
+            });
+            
+            skinContainer.appendChild(skinElement);
+        });
+    }
+    
+    // إظهار الإشعارات
+    function showNotification(message) {
+        const notification = document.createElement('div');
+        notification.style.position = 'fixed';
+        notification.style.top = '50%';
+        notification.style.left = '50%';
+        notification.style.transform = 'translate(-50%, -50%)';
+        notification.style.background = 'rgba(0, 200, 255, 0.9)';
+        notification.style.color = 'white';
+        notification.style.padding = '15px 30px';
+        notification.style.borderRadius = '25px';
+        notification.style.fontWeight = 'bold';
+        notification.style.fontSize = '1.2em';
+        notification.style.zIndex = '1000';
+        notification.style.boxShadow = '0 0 20px rgba(0, 200, 255, 0.7)';
+        notification.textContent = message;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.transition = 'opacity 0.5s';
+            notification.style.opacity = '0';
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 500);
+        }, 2000);
+    }
+    
+    // تعديل الألوان
+    function adjustColor(color, amount) {
+        if (color.startsWith('#')) {
+            color = color.replace('#', '');
+            const num = parseInt(color, 16);
+            let r = (num >> 16) + amount;
+            let g = ((num >> 8) & 0x00FF) + amount;
+            let b = (num & 0x0000FF) + amount;
+            
+            r = Math.min(255, Math.max(0, r));
+            g = Math.min(255, Math.max(0, g));
+            b = Math.min(255, Math.max(0, b));
+            
+            return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).padStart(6, '0')}`;
+        }
+        return color;
+    }
+    
+    // إنشاء جسيمات الأثر
+    function createTrail() {
+        if (!player.trailEnabled || isGameOver) return;
+        
+        const currentSkin = skins.find(s => s.id === player.skin) || skins[0];
+        const isRainbow = currentSkin.trail === 'rainbow';
+        
+        for (let i = 0; i < 2; i++) {
+            const hue = isRainbow ? (Date.now() / 25 + i * 30) % 360 : 0;
+            const color = isRainbow ? `hsl(${hue}, 100%, 60%)` : currentSkin.trail;
+            
+            trailParticles.push({
+                x: player.x,
+                y: player.y + player.height / 2 + Math.random() * 15 - 8,
+                size: Math.random() * 4 + 2,
+                speedX: -obstacleSpeed * 0.7,
+                speedY: (Math.random() - 0.5) * 2,
+                color: color,
+                life: 25 + Math.random() * 15,
+                alpha: 0.9
+            });
+        }
+    }
+    
+    // إنشاء جسيمات الانفجار
+    function createExplosion(x, y) {
+        for (let i = 0; i < 30; i++) {
+            explosionParticles.push({
+                x: x,
+                y: y,
+                size: Math.random() * 6 + 3,
+                speedX: (Math.random() - 0.5) * 10,
+                speedY: (Math.random() - 0.5) * 10,
+                color: `hsl(${Math.random() * 60 + 20}, 100%, 60%)`,
+                life: 40
+            });
+        }
+    }
+    
+    // رسم الجسيمات
+    function drawParticles() {
+        particlesCtx.clearRect(0, 0, particlesCanvas.width, particlesCanvas.height);
+        
+        // رسم جسيمات الأثر
+        for (let i = trailParticles.length - 1; i >= 0; i--) {
+            const p = trailParticles[i];
+            particlesCtx.globalAlpha = p.alpha * (p.life / 40);
+            particlesCtx.fillStyle = p.color;
+            particlesCtx.beginPath();
+            particlesCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            particlesCtx.fill();
+            
+            p.x += p.speedX;
+            p.y += p.speedY;
+            p.life--;
+            
+            if (p.life <= 0) {
+                trailParticles.splice(i, 1);
+            }
+        }
+        
+        // رسم جسيمات الانفجار
+        for (let i = explosionParticles.length - 1; i >= 0; i--) {
+            const p = explosionParticles[i];
+            particlesCtx.globalAlpha = p.life / 40;
+            particlesCtx.fillStyle = p.color;
+            particlesCtx.beginPath();
+            particlesCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            particlesCtx.fill();
+            
+            p.x += p.speedX;
+            p.y += p.speedY;
+            p.life--;
+            
+            if (p.life <= 0) {
+                explosionParticles.splice(i, 1);
+            }
+        }
+        
+        particlesCtx.globalAlpha = 1;
+    }
+
+    // إنشاء العوائق والمصائد
+    function createObstaclesAndTraps() {
+        obstacles.length = 0;
+        traps.length = 0;
+        floatingPlatforms.length = 0;
+        coins.length = 0;
+        powerUps.length = 0;
+        
+        const numObstacles = Math.floor(Math.random() * 4) + 1;
+        const minGap = 300;
+        const maxGap = 400;
+
+        let lastObstacleX = canvas.width;
+
+        for (let i = 0; i < numObstacles; i++) {
+            const obstacleWidth = 30 + Math.random() * 10;
+
+            // عوائق
+            obstacles.push({
+                x: lastObstacleX + minGap + Math.random() * (maxGap - minGap),
+                y: canvas.height - groundHeight,
+                width: obstacleWidth,
+                height: 30 + Math.random() * 10
+            });
+
+            lastObstacleX = obstacles[obstacles.length - 1].x;
+
+            // مصائد
+            traps.push({
+                x: lastObstacleX + Math.random() * 150 + 50,
+                y: canvas.height - groundHeight - 2,
+                width: obstacleWidth,
+                height: 10,
+                isActivated: false
+            });
+        }
+
+        // إنشاء أرضيات طائرة
+        for (let i = 0; i < 3; i++) {
+            floatingPlatforms.push({
+                x: canvas.width + 200 * i,
+                y: canvas.height - groundHeight - 150 - Math.random() * 100,
+                width: 100,
+                height: 10
+            });
+        }
+
+        // إنشاء العملات المعدنية
+        for (let i = 0; i < 5; i++) {
+            coins.push({
+                x: canvas.width + Math.random() * canvas.width,
+                y: canvas.height - groundHeight - 50 - Math.random() * 100,
+                width: 20,
+                height: 20
+            });
+        }
+
+        // إنشاء القوى الخاصة
+        createPowerUps();
+    }
+    
+    // تطبيق القوة الخاصة
+    function applyPowerUp(type) {
+        switch (type) {
+            case 'speed':
+                if (!activePowerUps.speed) {
+                    obstacleSpeed += 2;
+                    activePowerUps.speed = Date.now() + 8000;
+                }
+                break;
+            case 'slow':
+                if (!activePowerUps.slow) {
+                    obstacleSpeed = Math.max(1, obstacleSpeed - 2);
+                    activePowerUps.slow = Date.now() + 8000;
+                }
+                break;
+            case 'coinMultiplier':
+                if (!activePowerUps.coinMultiplier) {
+                    coinCount *= 2;
+                    document.getElementById('coins').textContent = `العملات: ${coinCount}`;
+                    activePowerUps.coinMultiplier = Date.now() + 8000;
+                }
+                break;
+        }
+    }
+
+    // تحديث القوى الخاصة
+    function updatePowerUps() {
+        const now = Date.now();
+
+        if (activePowerUps.speed && now > activePowerUps.speed) {
+            obstacleSpeed -= 2;
+            delete activePowerUps.speed;
+        }
+
+        if (activePowerUps.slow && now > activePowerUps.slow) {
+            obstacleSpeed += 2;
+            delete activePowerUps.slow;
+        }
+
+        if (activePowerUps.coinMultiplier && now > activePowerUps.coinMultiplier) {
+            coinCount = Math.floor(coinCount / 2);
+            document.getElementById('coins').textContent = `العملات: ${coinCount}`;
+            delete activePowerUps.coinMultiplier;
+        }
+    }
+
+    // إنشاء القوى الخاصة
+    function createPowerUps() {
+        if (Date.now() - lastPowerUpTime >= powerUpInterval) {
+            const type = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
+            powerUps.push({
+                x: canvas.width + Math.random() * canvas.width,
+                y: canvas.height - groundHeight - 50 - Math.random() * 100,
+                width: 20,
+                height: 20,
+                type: type,
+                color: getColorForPowerUp(type)
+            });
+            lastPowerUpTime = Date.now();
+        }
+    }
+
+    // الحصول على لون القوة الخاصة
+    function getColorForPowerUp(type) {
+        switch (type) {
+            case 'speed':
+                return 'red'; 
+            case 'slow':
+                return 'blue'; 
+            case 'coinMultiplier':
+                return 'green'; 
+            default:
+                return 'white';
+        }
+    }
+
+    // رسم اللاعب
+    function drawPlayer() {
+        ctx.save();
+        ctx.translate(player.x + player.width / 2, player.y + player.height / 2);
+        ctx.rotate(player.rotation);
+        ctx.translate(-player.width / 2, -player.height / 2);
+        
+        const currentSkin = skins.find(s => s.id === player.skin) || skins[0];
+        const isRainbow = currentSkin.color === 'rainbow';
+        
+        // تأثير عدم القابلية للإصابة (وميض)
+        if (isInvulnerable && Math.floor(invulnerabilityTimer / 10) % 2 === 0) {
+            ctx.globalAlpha = 0.5;
+        }
+        
+        ctx.shadowColor = currentSkin.color;
+        ctx.shadowBlur = 20;
+
+        if (isRainbow) {
+            const hue = (Date.now() / 50) % 360;
+            ctx.fillStyle = `hsl(${hue}, 100%, 60%)`;
+        } else {
+            const gradient = ctx.createLinearGradient(0, 0, player.width, player.height);
+            gradient.addColorStop(0, currentSkin.color);
+            gradient.addColorStop(1, adjustColor(currentSkin.color, -30));
+            ctx.fillStyle = gradient;
+        }
+        ctx.fillRect(0, 0, player.width, player.height);
+
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(2, 2, player.width - 4, player.height - 4);
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+        
+        // العينان
+        ctx.fillRect(12, 15, 7, 7);
+        ctx.fillRect(31, 15, 7, 7);
+        
+        // الفم - ابتسامة على الأرض، خط مستقيم عند القفز
+        if (!player.isJumping) {
+            ctx.beginPath();
+            ctx.arc(player.width / 2, 30, 8, 0, Math.PI);
+            ctx.stroke();
+        } else {
+            ctx.fillRect(15, 28, 20, 3);
+        }
+        
+        // تأثير الإبراز
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.beginPath();
+        ctx.moveTo(5, 5);
+        ctx.lineTo(player.width - 5, 5);
+        ctx.lineTo(player.width - 15, 15);
+        ctx.lineTo(15, 15);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.restore();
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1;
+    }
+
+    // رسم العوائق والمصائد
+    function drawObstaclesAndTraps() {
+        // رسم العوائق
+        ctx.fillStyle = 'white';
+        obstacles.forEach(obstacle => {
+            ctx.beginPath();
+            ctx.moveTo(obstacle.x, obstacle.y);
+            ctx.lineTo(obstacle.x + obstacle.width / 2, obstacle.y - obstacle.height);
+            ctx.lineTo(obstacle.x + obstacle.width, obstacle.y);
+            ctx.closePath();
+            ctx.fill();
+        });
+
+        // رسم المصائد
+        ctx.fillStyle = 'darkorange';
+        traps.forEach(trap => {
+            ctx.fillRect(trap.x, trap.y - trap.height, trap.width, trap.height);
+        });
+
+        // رسم الأرضيات الطائرة
+        ctx.fillStyle = 'white';
+        floatingPlatforms.forEach(platform => {
+            ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+        });
+
+        // رسم العملات المعدنية
+        ctx.fillStyle = 'gold';
+        coins.forEach(coin => {
+            ctx.beginPath();
+            ctx.arc(coin.x + coin.width / 2, coin.y + coin.height / 2, coin.width / 2, 0, 2 * Math.PI);
+            ctx.fill();
+        });
+
+        // رسم القوى الخاصة
+        powerUps.forEach(powerUp => {
+            ctx.fillStyle = powerUp.color;
+            ctx.fillRect(powerUp.x, powerUp.y, powerUp.width, powerUp.height);
+        });
+    }
+
+    // تحديث اللاعب
+    function updatePlayer() {
+        if (isGameOver) return;
+
+        player.y += player.velocityY;
+        player.velocityY += player.gravity;
+
+        if (player.y > canvas.height - player.height - groundHeight) {
+            player.y = canvas.height - player.height - groundHeight;
+            player.velocityY = 0;
+            player.isJumping = false;
+            player.rotation = 0;
+        } else if (player.isJumping) {
+            player.rotation += player.rotationSpeed;
+            if (Math.random() > 0.5) {
+                createTrail();
+            }
+        }
+
+        // تحديث عدم القابلية للإصابة
+        if (isInvulnerable) {
+            invulnerabilityTimer--;
+            if (invulnerabilityTimer <= 0) {
+                isInvulnerable = false;
+            }
+        }
+
+        // الاصطدام بالعوائق
+        if (!isInvulnerable) {
+            obstacles.forEach(obstacle => {
+                if (player.x < obstacle.x + obstacle.width &&
+                    player.x + player.width > obstacle.x &&
+                    player.y < obstacle.y &&
+                    player.y + player.height > obstacle.y - obstacle.height) {
+                    takeDamage();
+                }
+            });
+        }
+
+        // الاصطدام بالمصائد
+        traps.forEach(trap => {
+            if (player.x < trap.x + trap.width &&
+                player.x + player.width > trap.x &&
+                player.y + player.height >= trap.y - trap.height) {
+                if (!trap.isActivated) {
+                    trap.isActivated = true;
+                    player.velocityY = player.jumpPower * 2;
+                    player.isJumping = true;
+                    playJumpSound();
+                }
+            }
+        });
+
+        // الاصطدام بالأرضيات الطائرة
+        floatingPlatforms.forEach(platform => {
+            if (player.x < platform.x + platform.width &&
+                player.x + player.width > platform.x &&
+                player.y + player.height > platform.y &&
+                player.y + player.height < platform.y + platform.height + player.velocityY) {
+                player.y = platform.y - player.height;
+                player.velocityY = 0;
+                player.isJumping = false;
+                player.rotation = 0;
+            }
+        });
+
+        // جمع العملات المعدنية
+        coins.forEach((coin, index) => {
+            if (player.x < coin.x + coin.width &&
+                player.x + player.width > coin.x &&
+                player.y < coin.y + coin.height &&
+                player.y + player.height > coin.y) {
+                coinCount++;
+                document.getElementById('coins').textContent = `العملات: ${coinCount}`;
+                localStorage.setItem('axelCoins', coinCount);
+                coins.splice(index, 1);
+            }
+        });
+
+        // التعامل مع القوى الخاصة
+        powerUps.forEach((powerUp, index) => {
+            if (player.x < powerUp.x + powerUp.width &&
+                player.x + player.width > powerUp.x &&
+                player.y < powerUp.y + powerUp.height &&
+                player.y + player.height > powerUp.y) {
+                applyPowerUp(powerUp.type);
+                powerUps.splice(index, 1);
+            }
+        });
+    }
+
+    // فقدان صحة
+    function takeDamage() {
+        health--;
+        document.getElementById('health').textContent = `الصحة: ${health}`;
+        
+        if (health <= 0) {
+            gameOver();
+        } else {
+            // تفعيل عدم القابلية للإصابة لمدة 2 ثانية
+            isInvulnerable = true;
+            invulnerabilityTimer = 120; // 120 frame = 2 ثانية تقريباً (60 fps)
+            playCollisionSound();
+            createExplosion(player.x + player.width / 2, player.y + player.height / 2);
+        }
+    }
+
+    // تحديث العوائق والمصائد
+    function updateObstaclesAndTraps() {
+        if (isGameOver) return;
+
+        obstacles.forEach(obstacle => {
+            obstacle.x -= obstacleSpeed;
+
+            if (obstacle.x < -obstacle.width) {
+               obstacle.x = canvas.width + Math.random() * 200 + 100;
+                score++;
+
+                if (score % 10 === 0) { 
+                    obstacleSpeed += 0.2;
+                }
+            }
+        });
+
+        traps.forEach(trap => {
+            trap.x -= obstacleSpeed;
+
+            if (trap.x < -trap.width) {
+                trap.x = canvas.width + Math.random() * 200 + 100;
+                trap.isActivated = false;
+            }
+        });
+
+        floatingPlatforms.forEach(platform => {
+            platform.x -= obstacleSpeed;
+
+            if (platform.x < -platform.width) {
+                platform.x = canvas.width + Math.random() * 200 + 100;
+                platform.y = canvas.height - groundHeight - 150 - Math.random() * 100;
+            }
+        });
+
+        coins.forEach(coin => {
+            coin.x -= obstacleSpeed;
+            if (coin.x < -coin.width) {
+                coin.x = canvas.width + Math.random() * canvas.width;
+                coin.y = canvas.height - groundHeight - 50 - Math.random() * 100;
+            }
+        });
+
+        powerUps.forEach(powerUp => {
+            powerUp.x -= obstacleSpeed;
+            if (powerUp.x < -powerUp.width) {
+                powerUp.x = canvas.width + Math.random() * canvas.width;
+                powerUp.y = canvas.height - groundHeight - 50 - Math.random() * 100;
+            }
+        });
+    }
+
+    // القفز
+    function jump() {
+        if (!player.isJumping && !isGameOver && gameRunning) {
+            player.velocityY = player.jumpPower;
+            player.isJumping = true;
+            playJumpSound();
+        }
+    }
+
+    // التعامل مع اللمس
+    function handleTouch(event) {
+        event.preventDefault();
+        jump();
+    }
+    
+    // تحديث أفضل نتيجة
+    function updateHighScore() {
+        if (score > highScore) {
+            highScore = score;
+            localStorage.setItem('axelHighScore', highScore);
+            document.getElementById('highScore').textContent = `أفضل نتيجة: ${highScore}`;
+            
+            // إظهار النتيجة الجديدة تحت أيقونة الكأس
+            document.getElementById('newHighScore').textContent = score;
+            document.getElementById('newHighScore').style.display = 'block';
+            
+            // إخفاء النتيجة الجديدة بعد 5 ثوانٍ
+            setTimeout(() => {
+                document.getElementById('newHighScore').style.display = 'none';
+            }, 5000);
+        }
+    }
+
+    // نهاية اللعبة
+    function gameOver() {
+        isGameOver = true;
+        gameRunning = false;
+        createExplosion(player.x + player.width / 2, player.y + player.height / 2);
+        playCollisionSound();
+        updateHighScore();
+        
+        document.getElementById('finalScore').textContent = `النتيجة: ${score}`;
+        document.getElementById('gameOver').style.display = 'block';
+    }
+
+    // إعادة تشغيل اللعبة
+    function restartGame() {
+        isGameOver = false;
+        gameRunning = true;
+        player.x = 50;
+        player.y = canvas.height - groundHeight - 50;
+        player.velocityY = 0;
+        player.isJumping = false;
+        player.rotation = 0;
+        createObstaclesAndTraps();
+        score = 0;
+        coinCount = localStorage.getItem('axelCoins') ? parseInt(localStorage.getItem('axelCoins')) : 0;
+        obstacleSpeed = 7;
+        activePowerUps = {};
+        
+        // إعادة تعيين الصحة
+        health = 3;
+        document.getElementById('health').textContent = `الصحة: ${health}`;
+        isInvulnerable = false;
+        
+        document.getElementById('score').textContent = `النتيجة: ${score}`;
+        document.getElementById('coins').textContent = `العملات: ${coinCount}`;
+        document.getElementById('gameOver').style.display = 'none';
+        
+        gameLoop();
+    }
+
+    // حلقة اللعبة الرئيسية
+    function gameLoop() {
+        if (isGameOver) return;
+
+        // مسح canvas اللعبة
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        updatePlayer();
+        updateObstaclesAndTraps();
+        createPowerUps();
+        updatePowerUps();
+        drawPlayer();
+        drawObstaclesAndTraps();
+        drawParticles();
+
+        document.getElementById('score').textContent = `النتيجة: ${score}`;
+        requestAnimationFrame(gameLoop);
+    }
+
+    // بدء اللعبة
+    function startGame() {
+        document.getElementById('startScreen').style.display = 'none';
+        gameRunning = true;
+        isGameOver = false;
+        createObstaclesAndTraps();
+        gameLoop();
+    }
+
+    // تهيئة الواجهة
+    function initUI() {
+        document.getElementById('highScore').textContent = `أفضل نتيجة: ${highScore}`;
+        document.getElementById('score').textContent = `النتيجة: ${score}`;
+        document.getElementById('coins').textContent = `العملات: ${coinCount}`;
+        document.getElementById('health').textContent = `الصحة: ${health}`;
+    }
+
+    // إضافة مستمعي الأحداث
+    document.getElementById('restartBtn').addEventListener('click', restartGame);
+    document.getElementById('shopBtn').addEventListener('click', () => {
+        document.getElementById('shopScreen').style.display = 'flex';
+        initShop();
+    });
+    document.getElementById('backBtn').addEventListener('click', () => {
+        document.getElementById('shopScreen').style.display = 'none';
+    });
+
+    document.getElementById('startScreen').addEventListener('click', startGame);
+    document.addEventListener('touchstart', handleTouch);
+    document.addEventListener('keydown', (e) => {
+        if (e.code === 'Space') {
+            jump();
+        }
+    });
+
+    // تهيئة اللعبة عند التحميل
+    window.addEventListener('load', () => {
+        initUI();
+    });
+    </script>
 </body>
 </html>
